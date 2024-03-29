@@ -16,6 +16,8 @@ from torchvision import datasets, transforms, utils
 from dataset import MultiResolutionDataset
 from model import StyledGenerator, Discriminator, StegaStampDecoder
 
+import os
+
 
 def generate_random_fingerprints(fingerprint_length, batch_size=4, size=(400, 400)):
     z = torch.zeros((batch_size, fingerprint_length), dtype=torch.float).random_(0, 2)
@@ -77,12 +79,13 @@ def train(args, dataset, generator, discriminator):
     decoder = StegaStampDecoder(resolution=128, IMAGE_CHANNELS=3, fingerprint_size=100)
 
     # Load weights into model and freeze weights
-    weights = torch.load(r"C:\Users\kaden\Main\EE465\Watermarking_Project1\resutls\test_stegastamp_AGANF\checkpoints\stegastamp_100_6000_decoder.pth")
+    weights = torch.load('/home/kaden/Downloads/Watermarking_Project1/resutls/test_stegastamp_AGANF/checkpoints/stegastamp_100_6000_decoder.pth')
     decoder.load_state_dict(weights)
     decoder.cuda()
     decoder.eval()
 
     fingerprints = generate_random_fingerprints(100, args.batch_default, (128, 128))
+    torch.save(fingerprints, './fingerprints/fingerprints.pth')
     fingerprints = fingerprints.cuda()
 
     for i in pbar:
@@ -121,7 +124,7 @@ def train(args, dataset, generator, discriminator):
                     'd_optimizer': d_optimizer.state_dict(),
                     'g_running': g_running.state_dict(),
                 },
-                f'checkpoint/train_step-{ckpt_step}.model',
+                f'./checkpoint/train_step-{ckpt_step}.pth',
             )
 
             adjust_lr(g_optimizer, args.lr.get(resolution, 0.001))
@@ -262,14 +265,14 @@ def train(args, dataset, generator, discriminator):
 
             utils.save_image(
                 torch.cat(images, 0),
-                f'sample/{str(i + 1).zfill(6)}.png',
+                f'./sample/{str(i + 1).zfill(6)}.png',
                 nrow=gen_i,
                 normalize=True,
             )
 
         if (i + 1) % 500 == 0:  # 10000
             torch.save(
-                g_running.state_dict(), f'checkpoint/{str(i + 1).zfill(8)}.pth'
+                g_running.state_dict(), f'./checkpoint/{str(i + 1).zfill(8)}.pth'
             )
 
         state_msg = (
@@ -281,6 +284,8 @@ def train(args, dataset, generator, discriminator):
 
 
 if __name__ == '__main__':
+    os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+
     code_size = 512
     batch_size = 16
     n_critic = 1
@@ -288,7 +293,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Progressive Growing of GANs')
 
     parser.add_argument('--path', type=str, help='path of specified dataset',
-                        default=r"C:\Users\kaden\Main\EE465\Watermarking_Project1\CelebA\img_align_celeba\img_align_celeba")
+                        default='/home/kaden/Downloads/archive/img_align_celeba/img_align_celeba')
     parser.add_argument(
         '--phase',
         type=int,
