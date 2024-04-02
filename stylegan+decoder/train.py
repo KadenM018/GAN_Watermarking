@@ -293,7 +293,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Progressive Growing of GANs')
 
     parser.add_argument('--path', type=str, help='path of specified dataset',
-                        default='/home/kaden/Downloads/archive/img_align_celeba/img_align_celeba')
+                        default=r"C:\Users\kaden\Main\EE465\CelebA\img_align_celeba\img_align_celeba")
     parser.add_argument(
         '--phase',
         type=int,
