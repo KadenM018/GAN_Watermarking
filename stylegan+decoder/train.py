@@ -76,7 +76,7 @@ def train(args, dataset, generator, discriminator):
     final_progress = False
 
     # Create Stegastamp decoder
-    decoder = StegaStampDecoder(resolution=128, IMAGE_CHANNELS=3, fingerprint_size=100)
+    decoder = StegaStampDecoder(resolution=args.init_size, IMAGE_CHANNELS=3, fingerprint_size=100)
 
     # Load weights into model and freeze weights
     weights = torch.load(args.segastamp_weights)
@@ -88,7 +88,7 @@ def train(args, dataset, generator, discriminator):
     os.makedirs('./samples', exist_ok=True)
     os.makedirs('./fingerprints', exist_ok=True)
 
-    fingerprints = generate_random_fingerprints(100, args.batch_default, (128, 128))
+    fingerprints = generate_random_fingerprints(100, args.batch_default, (args.init_size, args.init_size))
     torch.save(fingerprints, './fingerprints/fingerprints.pth')
     fingerprints = fingerprints.cuda()
 
@@ -364,8 +364,8 @@ if __name__ == '__main__':
     transform = transforms.Compose(
         [
             transforms.RandomHorizontalFlip(),
-            transforms.CenterCrop(178),
-            transforms.Resize(128),
+            transforms.CenterCrop(int(args.init_size * 1.391)),
+            transforms.Resize(args.init_size),
             transforms.ToTensor(),
             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5), inplace=True),
         ]
@@ -374,7 +374,7 @@ if __name__ == '__main__':
     dataset = MultiResolutionDataset(args.path, transform)
 
     if args.sched:
-        args.lr = {128: 0.0015, 256: 0.002, 512: 0.003, 1024: 0.003}
+        args.lr = {128: 0.0015, 256: 0.002, 512: 0.003, 1024: 0.003, 2048: 0.003}
         args.batch = {4: 512, 8: 256, 16: 128, 32: 64, 64: 32, 128: 32, 256: 32}
 
     else:
