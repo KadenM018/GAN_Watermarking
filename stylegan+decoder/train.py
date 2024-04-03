@@ -128,7 +128,7 @@ def train(args, dataset, generator, discriminator):
                     'd_optimizer': d_optimizer.state_dict(),
                     'g_running': g_running.state_dict(),
                 },
-                f'./checkpoint/train_step-{ckpt_step}.pth',
+                f'./checkpoints/train_step-{ckpt_step}.pth',
             )
 
             adjust_lr(g_optimizer, args.lr.get(resolution, 0.001))
@@ -254,7 +254,7 @@ def train(args, dataset, generator, discriminator):
                 )
                 print(f'bitwise accuracy: {bitwise_accuracy}\n')
 
-        if (i + 1) % 100 == 0:  # 100
+        if (i + 1) % 250 == 0:  # 100
             images = []
 
             gen_i, gen_j = args.gen_sample.get(resolution, (10, 5))
@@ -276,7 +276,12 @@ def train(args, dataset, generator, discriminator):
 
         if (i + 1) % 1000 == 0:  # 10000
             torch.save(
-                g_running.state_dict(), f'./checkpoints/{str(i + 1).zfill(8)}.pth'
+                {
+                    'generator': generator.module.state_dict(),
+                    'discriminator': discriminator.module.state_dict(),
+                    'g_running': g_running.state_dict(),
+                },
+                f'./checkpoints/{str(i + 1).zfill(8)}.pth',
             )
 
         state_msg = (
@@ -288,8 +293,6 @@ def train(args, dataset, generator, discriminator):
 
 
 if __name__ == '__main__':
-    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-
     code_size = 512
     batch_size = 16
     n_critic = 1
@@ -297,9 +300,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Progressive Growing of GANs')
 
     parser.add_argument('--path', type=str, help='path of specified dataset',
-                        default=r"C:\Users\kaden\Main\EE465\CelebA\img_align_celeba\img_align_celeba")
+                        default='/home/kaden/Downloads/archive/img_align_celeba/img_align_celeba')
     parser.add_argument('--segastamp_weights', type=str, help='Path to trained StegaStamp weights',
-                        default=r"C:\Users\kaden\Main\EE465\Watermarking_Project1\resutls\test_stegastamp_AGANF\checkpoints\stegastamp_100_6000_decoder.pth")
+                        default='/home/kaden/Downloads/stegastamp_100_6000_decoder.pth')
+    parser.add_argument('--stylegan_weights', type=str, help='Path to trained StyleGAN weights',
+                        default='')
+    parser.add_argument('--cuda_device', type=int, default=1)
     parser.add_argument(
         '--phase',
         type=int,
@@ -331,12 +337,20 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    os.environ["CUDA_VISIBLE_DEVICES"] = f'{args.cuda_device}'
+
     generator = nn.DataParallel(StyledGenerator(code_size)).cuda()
     discriminator = nn.DataParallel(
         Discriminator(from_rgb_activate=not args.no_from_rgb_activate)
     ).cuda()
     g_running = StyledGenerator(code_size).cuda()
     g_running.train(False)
+
+    if os.path.isfile(args.stylegan_weights):
+        weights = torch.load(args.stylegan_weights, map_location=f'cuda:0')
+        generator.load_state_dict(weights['generator'])
+        discriminator.load_state_dict(weights['discriminator'])
+        g_running.load_state_dict(weights['g_running'])
 
     g_optimizer = optim.Adam(
         generator.module.generator.parameters(), lr=args.lr, betas=(0.0, 0.99)
