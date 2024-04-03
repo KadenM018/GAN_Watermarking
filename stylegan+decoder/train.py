@@ -79,10 +79,14 @@ def train(args, dataset, generator, discriminator):
     decoder = StegaStampDecoder(resolution=128, IMAGE_CHANNELS=3, fingerprint_size=100)
 
     # Load weights into model and freeze weights
-    weights = torch.load('/home/kaden/Downloads/Watermarking_Project1/resutls/test_stegastamp_AGANF/checkpoints/stegastamp_100_6000_decoder.pth')
+    weights = torch.load(args.segastamp_weights)
     decoder.load_state_dict(weights)
     decoder.cuda()
     decoder.eval()
+
+    os.makedirs('./checkpoints', exist_ok=True)
+    os.makedirs('./samples', exist_ok=True)
+    os.makedirs('./fingerprints', exist_ok=True)
 
     fingerprints = generate_random_fingerprints(100, args.batch_default, (128, 128))
     torch.save(fingerprints, './fingerprints/fingerprints.pth')
@@ -265,14 +269,14 @@ def train(args, dataset, generator, discriminator):
 
             utils.save_image(
                 torch.cat(images, 0),
-                f'./sample/{str(i + 1).zfill(6)}.png',
+                f'./samples/{str(i + 1).zfill(6)}.png',
                 nrow=gen_i,
                 normalize=True,
             )
 
-        if (i + 1) % 500 == 0:  # 10000
+        if (i + 1) % 1000 == 0:  # 10000
             torch.save(
-                g_running.state_dict(), f'./checkpoint/{str(i + 1).zfill(8)}.pth'
+                g_running.state_dict(), f'./checkpoints/{str(i + 1).zfill(8)}.pth'
             )
 
         state_msg = (
@@ -284,7 +288,7 @@ def train(args, dataset, generator, discriminator):
 
 
 if __name__ == '__main__':
-    os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
     code_size = 512
     batch_size = 16
@@ -294,6 +298,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--path', type=str, help='path of specified dataset',
                         default=r"C:\Users\kaden\Main\EE465\CelebA\img_align_celeba\img_align_celeba")
+    parser.add_argument('--segastamp_weights', type=str, help='Path to trained StegaStamp weights',
+                        default=r"C:\Users\kaden\Main\EE465\Watermarking_Project1\resutls\test_stegastamp_AGANF\checkpoints\stegastamp_100_6000_decoder.pth")
     parser.add_argument(
         '--phase',
         type=int,
