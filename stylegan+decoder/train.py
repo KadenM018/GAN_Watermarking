@@ -294,7 +294,6 @@ def train(args, dataset, generator, discriminator):
 
 if __name__ == '__main__':
     code_size = 512
-    batch_size = 16
     n_critic = 1
 
     parser = argparse.ArgumentParser(description='Progressive Growing of GANs')
@@ -306,6 +305,7 @@ if __name__ == '__main__':
     parser.add_argument('--stylegan_weights', type=str, help='Path to trained StyleGAN weights',
                         default='')
     parser.add_argument('--cuda_device', type=int, default=1)
+    parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument(
         '--phase',
         type=int,
@@ -338,6 +338,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     os.environ["CUDA_VISIBLE_DEVICES"] = f'{args.cuda_device}'
+
+    batch_size = args.batch_size
 
     generator = nn.DataParallel(StyledGenerator(code_size)).cuda()
     discriminator = nn.DataParallel(
@@ -397,6 +399,6 @@ if __name__ == '__main__':
 
     args.gen_sample = {512: (8, 4), 1024: (4, 2)}
 
-    args.batch_default = 16
+    args.batch_default = args.batch_size
 
     train(args, dataset, generator, discriminator)
