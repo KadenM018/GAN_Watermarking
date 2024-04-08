@@ -1,4 +1,5 @@
 import argparse
+import copy
 import random
 import math
 
@@ -38,6 +39,7 @@ def accumulate(model1, model2, decay=0.999):
 
 def sample_data(dataset, batch_size, image_size=4):
     dataset.resolution = image_size
+    dataset.transform.transforms[2] = transforms.Resize(dataset.resolution)
     loader = DataLoader(dataset, shuffle=True, batch_size=batch_size, num_workers=1, drop_last=True)
 
     return loader
@@ -88,8 +90,12 @@ def train(args, dataset, generator, discriminator):
     os.makedirs('./samples', exist_ok=True)
     os.makedirs('./fingerprints', exist_ok=True)
 
-    fingerprints = generate_random_fingerprints(100, args.batch_default, (args.init_size, args.init_size))
+    # Create Fingerprints
+    fingerprint_base = generate_random_fingerprints(100, 1, (args.init_size, args.init_size))
+    fingerprints = copy.deepcopy(fingerprint_base)
     torch.save(fingerprints, './fingerprints/fingerprints.pth')
+    for i in range(0, args.batch_size - 1):
+        fingerprints = torch.concatenate([fingerprints, fingerprint_base])
     fingerprints = fingerprints.cuda()
 
     for i in pbar:
@@ -299,14 +305,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Progressive Growing of GANs')
 
     parser.add_argument('--path', type=str, help='path of specified dataset',
-                        default='/home/kaden/Downloads/archive/img_align_celeba/img_align_celeba')
+                        default=r"C:\Users\kaden\Main\EE465\CelebA\img_align_celeba\img_align_celeba")
     parser.add_argument('--segastamp_weights', type=str, help='Path to trained StegaStamp weights',
-                        default='/home/kaden/Downloads/stegastamp_100_6000_decoder.pth')
+                        default=r"C:\Users\kaden\Main\EE465\Watermarking_Project1\resutls\test_stegastamp_AGANF\checkpoints\stegastamp_100_6000_decoder.pth")
     parser.add_argument('--stylegan_weights', type=str, help='Path to trained StyleGAN weights',
                         default='')
-    parser.add_argument('--cuda_device', type=int, default=1)
+    parser.add_argument('--cuda_device', type=int, default=0)
     parser.add_argument('--batch_size', type=int, default=16)
-    parser.add_argument('--phase', type=int, default=600_000,
+    parser.add_argument('--phase', type=int, default=9999999,
                         help='number of samples used for each training phases')
     parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
     parser.add_argument('--sched', action='store_true', help='use lr scheduling')
