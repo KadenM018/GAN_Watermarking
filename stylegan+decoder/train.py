@@ -91,11 +91,11 @@ def train(args, dataset, generator, discriminator):
     os.makedirs('./fingerprints', exist_ok=True)
 
     # Create Fingerprints
-    fingerprint_base = generate_random_fingerprints(100, 1, (args.init_size, args.init_size))
-    fingerprints = copy.deepcopy(fingerprint_base)
+    fingerprints = generate_random_fingerprints(100, 1, (args.init_size, args.init_size))
+    # fingerprints = copy.deepcopy(fingerprint_base)
     torch.save(fingerprints, './fingerprints/fingerprints.pth')
-    for i in range(0, args.batch_size - 1):
-        fingerprints = torch.concatenate([fingerprints, fingerprint_base])
+    # for i in range(0, args.batch_size - 1):
+    #     fingerprints = torch.concatenate([fingerprints, fingerprint_base])
     fingerprints = fingerprints.cuda()
 
     for i in pbar:
@@ -194,7 +194,10 @@ def train(args, dataset, generator, discriminator):
         # Added stuff
         decoder_output = decoder(fake_image.cuda())
         criterion = nn.BCEWithLogitsLoss()
-        BCE_loss = criterion(decoder_output.view(-1), fingerprints.view(-1))
+
+        BCE_loss = 0
+        for j in range(0, decoder_output.size(0)):
+            BCE_loss += criterion(decoder_output[j].view(-1), fingerprints.view(-1))
 
         if args.loss == 'wgan-gp':
             fake_predict = fake_predict.mean()
@@ -243,7 +246,7 @@ def train(args, dataset, generator, discriminator):
             if i%10 == 0:
                 gen_loss_val = loss.item()
 
-            gamma = 3
+            gamma = 10
             loss = loss + gamma * BCE_loss
 
             loss.backward()
@@ -312,7 +315,7 @@ if __name__ == '__main__':
                         default='')
     parser.add_argument('--cuda_device', type=int, default=0)
     parser.add_argument('--batch_size', type=int, default=16)
-    parser.add_argument('--phase', type=int, default=9999999,
+    parser.add_argument('--phase', type=int, default=9999999999,
                         help='number of samples used for each training phases')
     parser.add_argument('--lr', default=0.001, type=float, help='learning rate')
     parser.add_argument('--sched', action='store_true', help='use lr scheduling')
