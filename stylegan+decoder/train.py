@@ -192,12 +192,13 @@ def train(args, dataset, generator, discriminator):
         fake_predict = discriminator(fake_image, step=step, alpha=alpha)
 
         # Added stuff
-        decoder_output = decoder(fake_image.cuda())
+        decoder_output = decoder(fake_image)
         criterion = nn.BCEWithLogitsLoss()
 
         BCE_loss = 0
         for j in range(0, decoder_output.size(0)):
             BCE_loss += criterion(decoder_output[j].view(-1), fingerprints.view(-1))
+        BCE_loss = BCE_loss / decoder_output.size(0)
 
         if args.loss == 'wgan-gp':
             fake_predict = fake_predict.mean()
