@@ -191,15 +191,6 @@ def train(args, dataset, generator, discriminator):
         fake_image = generator(gen_in1, step=step, alpha=alpha)
         fake_predict = discriminator(fake_image, step=step, alpha=alpha)
 
-        # Added stuff
-        decoder_output = decoder(fake_image)
-        criterion = nn.BCEWithLogitsLoss()
-
-        BCE_loss = 0
-        for j in range(0, decoder_output.size(0)):
-            BCE_loss += criterion(decoder_output[j].view(-1), fingerprints.view(-1))
-        BCE_loss = BCE_loss / decoder_output.size(0)
-
         if args.loss == 'wgan-gp':
             fake_predict = fake_predict.mean()
             fake_predict.backward()
@@ -238,6 +229,15 @@ def train(args, dataset, generator, discriminator):
 
             predict = discriminator(fake_image, step=step, alpha=alpha)
 
+            # Added stuff
+            decoder_output = decoder(fake_image)
+            criterion = nn.BCEWithLogitsLoss()
+
+            BCE_loss = 0
+            for j in range(0, decoder_output.size(0)):
+                BCE_loss += criterion(decoder_output[j].view(-1), fingerprints.view(-1))
+            BCE_loss = BCE_loss / decoder_output.size(0)
+
             if args.loss == 'wgan-gp':
                 loss = -predict.mean()
 
@@ -247,7 +247,8 @@ def train(args, dataset, generator, discriminator):
             if i%10 == 0:
                 gen_loss_val = loss.item()
 
-            gamma = 10
+            gamma = 3
+            print(f'\nBCE_loss: {BCE_loss}\tloss: {loss}\tdiv: {BCE_loss.item() / loss.item()}\n')
             loss = loss + gamma * BCE_loss
 
             loss.backward()
@@ -309,9 +310,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Progressive Growing of GANs')
 
     parser.add_argument('--path', type=str, help='path of specified dataset',
-                        default=r"C:\Users\kaden\Main\EE465\CelebA\img_align_celeba\img_align_celeba")
+                        default="/home/kaden/Downloads/archive/img_align_celeba/img_align_celeba")
     parser.add_argument('--segastamp_weights', type=str, help='Path to trained StegaStamp weights',
-                        default=r"C:\Users\kaden\Main\EE465\Watermarking_Project1\resutls\test_stegastamp_AGANF\checkpoints\stegastamp_100_6000_decoder.pth")
+                        default="/home/kaden/Downloads/stegastamp_100_6000_decoder.pth")
     parser.add_argument('--stylegan_weights', type=str, help='Path to trained StyleGAN weights',
                         default='')
     parser.add_argument('--cuda_device', type=int, default=0)
