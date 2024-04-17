@@ -3,6 +3,8 @@ import os
 from os.path import join
 from time import time
 from datetime import datetime
+
+import torchvision
 from tqdm import tqdm
 import PIL
 import torch
@@ -16,6 +18,8 @@ from tensorboardX import SummaryWriter
 from torch.optim import Adam
 import models
 import argparse
+import random
+import copy
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -24,7 +28,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--use_celeba_preprocessing",
-    action="store_true",
+    default=True,
     help="Use CelebA specific preprocessing when loading the images.",
 )
 parser.add_argument(
@@ -83,7 +87,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = str(args.cuda)
 
 LOGS_PATH = os.path.join(args.output_dir, "logs")
 CHECKPOINTS_PATH = os.path.join(args.output_dir, "checkpoints")
-SAVED_IMAGES = os.path.join(args.output_dir, "./saved_images")
+SAVED_IMAGES = os.path.join(args.output_dir, "saved_images")
 
 writer = SummaryWriter(LOGS_PATH)
 
@@ -194,6 +198,7 @@ def main():
         dataloader = DataLoader(
             dataset, batch_size=args.batch_size, shuffle=True, num_workers=16
         )
+        count = 0
         for images, _ in tqdm(dataloader):
             global_step += 1
 
@@ -219,7 +224,12 @@ def main():
             fingerprinted_images = encoder(fingerprints, clean_images)
             residual = fingerprinted_images - clean_images
 
-            decoder_output = decoder(fingerprinted_images)
+            data_processing = transforms.ColorJitter(0.75)
+            altered_images = data_processing(fingerprinted_images)
+            # torchvision.utils.save_image(altered_images, f'/home/kaden/Desktop/GAN_Watermarking/test/{count}.png')
+            count += 1
+
+            decoder_output = decoder(altered_images)
 
             criterion = nn.MSELoss()
             l2_loss = criterion(fingerprinted_images, clean_images)

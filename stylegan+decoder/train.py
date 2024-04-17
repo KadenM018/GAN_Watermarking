@@ -291,6 +291,8 @@ def train(args, dataset, generator, discriminator):
                     'generator': generator.module.state_dict(),
                     'discriminator': discriminator.module.state_dict(),
                     'g_running': g_running.state_dict(),
+                    'd_optimizer': d_optimizer.state_dict(),
+                    'g_optimizer': g_optimizer.state_dict(),
                 },
                 f'./checkpoints/{str(i + 1).zfill(8)}.pth',
             )
@@ -313,8 +315,6 @@ if __name__ == '__main__':
                         default="/home/kaden/Downloads/archive/img_align_celeba/img_align_celeba")
     parser.add_argument('--segastamp_weights', type=str, help='Path to trained StegaStamp weights',
                         default="/home/kaden/Downloads/stegastamp_100_6000_decoder.pth")
-    parser.add_argument('--stylegan_weights', type=str, help='Path to trained StyleGAN weights',
-                        default='')
     parser.add_argument('--cuda_device', type=int, default=0)
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--phase', type=int, default=9999999999,
@@ -323,7 +323,7 @@ if __name__ == '__main__':
     parser.add_argument('--sched', action='store_true', help='use lr scheduling')
     parser.add_argument('--init_size', default=128, type=int, help='initial image size')
     parser.add_argument('--max_size', default=1024, type=int, help='max image size')
-    parser.add_argument('--ckpt', default=None, type=str, help='load from previous checkpoints')
+    parser.add_argument('--ckpt', default='/home/kaden/Desktop/GAN_Watermarking/stylegan+decoder/checkpoints/good_optim1/00076000.pth', type=str, help='load from previous checkpoints')
     parser.add_argument('--no_from_rgb_activate', action='store_true',
                         help='use activate in from_rgb (original implementation)')
     parser.add_argument('--mixing', action='store_true', help='use mixing regularization')
@@ -342,12 +342,6 @@ if __name__ == '__main__':
     ).cuda()
     g_running = StyledGenerator(code_size).cuda()
     g_running.train(False)
-
-    if os.path.isfile(args.stylegan_weights):
-        weights = torch.load(args.stylegan_weights, map_location=f'cuda:0')
-        generator.load_state_dict(weights['generator'])
-        discriminator.load_state_dict(weights['discriminator'])
-        g_running.load_state_dict(weights['g_running'])
 
     g_optimizer = optim.Adam(
         generator.module.generator.parameters(), lr=args.lr, betas=(0.0, 0.99)
@@ -369,8 +363,8 @@ if __name__ == '__main__':
         generator.module.load_state_dict(ckpt['generator'])
         discriminator.module.load_state_dict(ckpt['discriminator'])
         g_running.load_state_dict(ckpt['g_running'])
-        g_optimizer.load_state_dict(ckpt['g_optimizer'])
-        d_optimizer.load_state_dict(ckpt['d_optimizer'])
+        # g_optimizer.load_state_dict(ckpt['g_optimizer'])
+        # d_optimizer.load_state_dict(ckpt['d_optimizer'])
 
     transform = transforms.Compose(
         [
