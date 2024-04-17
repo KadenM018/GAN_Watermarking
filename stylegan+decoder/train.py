@@ -230,7 +230,9 @@ def train(args, dataset, generator, discriminator):
             predict = discriminator(fake_image, step=step, alpha=alpha)
 
             # Added stuff
-            decoder_output = decoder(fake_image)
+            data_processing = transforms.ColorJitter(0.75)
+            altered_images = data_processing(fake_image)
+            decoder_output = decoder(altered_images)
             criterion = nn.BCEWithLogitsLoss()
 
             BCE_loss = 0
