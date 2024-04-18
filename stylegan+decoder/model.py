@@ -39,7 +39,8 @@ class StegaStampDecoder(nn.Module):
 
     def forward(self, image):
         x = self.decoder(image)
-        x = x.view(-1, self.resolution * self.resolution * 128 // 32 // 32)
+        # x = x.view(-1, self.resolution * self.resolution * 128 // 32 // 32)
+        x = torch.reshape(x, (x.size(0), x.size(1) * x.size(2) * x.size(3)))
         return self.dense(x)
 
 

@@ -321,7 +321,7 @@ def main():
                 )
 
             # checkpointing
-            if global_step % 1000 == 0:
+            if global_step % 3000 == 0:
                 torch.save(
                     decoder_encoder_optim.state_dict(),
                     join(CHECKPOINTS_PATH, EXP_NAME + f"_{global_step}_optim.pth"),

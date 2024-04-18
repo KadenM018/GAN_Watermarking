@@ -365,8 +365,8 @@ if __name__ == '__main__':
         generator.module.load_state_dict(ckpt['generator'])
         discriminator.module.load_state_dict(ckpt['discriminator'])
         g_running.load_state_dict(ckpt['g_running'])
-        # g_optimizer.load_state_dict(ckpt['g_optimizer'])
-        # d_optimizer.load_state_dict(ckpt['d_optimizer'])
+        g_optimizer.load_state_dict(ckpt['g_optimizer'])
+        d_optimizer.load_state_dict(ckpt['d_optimizer'])
 
     transform = transforms.Compose(
         [
