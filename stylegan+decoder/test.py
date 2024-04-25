@@ -6,7 +6,6 @@ from torch import nn
 from model import StyledGenerator,StegaStampDecoder
 import os
 from torchvision import transforms
-from fid_score import fid_score
 
 data_processing = transforms.ColorJitter(0, 0, 0, 0)
 
@@ -83,6 +82,7 @@ fingerprints_predicted = (decoder_output > 0).float()
 bitwise_accuracy = 1.0 - torch.mean(
     torch.abs(fingerprints - fingerprints_predicted)
 )
+
 print(f'\nbitwise accuracy: {bitwise_accuracy}')
 
 torchvision.utils.save_image(fake_image, os.path.join(args.save_path, 'sample.png'), normalize=True)
