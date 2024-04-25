@@ -6,12 +6,18 @@ from torch import nn
 from model import StyledGenerator,StegaStampDecoder
 import os
 from torchvision import transforms
+from fid_score import fid_score
+
+data_processing = transforms.ColorJitter(0, 0, 0, 0)
 
 parser = argparse.ArgumentParser(description='Progressive Growing of GANs')
+
 parser.add_argument('--size', type=int, default=128,
-                    help='Size of the generated image. For CelebA this should be 128')
+                    help='Size of the generated image. For CelebA this should be 128 and for flower dataset it should be 256')
+
 parser.add_argument('--num_samples', type=int, default=16,
                     help='Number of samples to generate')
+
 parser.add_argument('--device', type=str, default='cpu',
                     help='Write cuda:<device_num> for gpu or cpu for cpu')
 
@@ -25,10 +31,10 @@ parser.add_argument('--stylegan_weights', type=str,
 
 parser.add_argument('--fingerprints', type=str,
                     default="/home/kaden/Desktop/GAN_Watermarking/stylegan+decoder/fingerprints/good_optim1/fingerprints.pth",
-                    help='Path to where the watermark is saved')
+                    help='Path to where the watermark/fingerprints is saved')
 
 parser.add_argument('--save_path', type=str,
-                    default="/home/kaden/Desktop/GAN_Watermarking/stylegan+decoder/samples/normal",
+                    default="/home/kaden/Desktop/GAN_Watermarking (copy)/stylegan+decoder/samples/normal",
                     help='Path of the folder to where the images will be saved')
 
 args = parser.parse_args()
@@ -62,8 +68,6 @@ gen_in2 = gen_in2.squeeze(0)
 
 fake_image = generator(gen_in2, step=step, alpha=1)
 
-# Added stuff
-data_processing = transforms.ColorJitter(0, 0, 0, 0)
 altered_images = data_processing(fake_image)
 
 decoder_output = decoder(altered_images)
