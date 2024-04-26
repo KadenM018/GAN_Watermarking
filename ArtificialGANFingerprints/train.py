@@ -48,7 +48,7 @@ parser.add_argument(
     help="Height and width of square images.",
 )
 parser.add_argument(
-    "--num_epochs", type=int, default=20, help="Number of training epochs."
+    "--num_epochs", type=int, default=40, help="Number of training epochs."
 )
 parser.add_argument("--batch_size", type=int, default=64, help="Batch size.")
 parser.add_argument("--lr", type=float, default=0.0001, help="Learning rate.")
@@ -124,6 +124,8 @@ class CustomImageFolder(Dataset):
         filename = self.filenames[idx]
         image = PIL.Image.open(filename)
         if self.transform:
+            if image.mode != 'RGB':
+                image = image.convert('RGB')
             image = self.transform(image)
         return image, 0
 
@@ -195,8 +197,9 @@ def main():
     steps_since_l2_loss_activated = -1
 
     for i_epoch in range(args.num_epochs):
+        print(f'\nEPOCH: {i_epoch}\n')
         dataloader = DataLoader(
-            dataset, batch_size=args.batch_size, shuffle=True, num_workers=16
+            dataset, batch_size=args.batch_size, shuffle=True, num_workers=4
         )
         count = 0
         for images, _ in tqdm(dataloader):
@@ -321,7 +324,7 @@ def main():
                 )
 
             # checkpointing
-            if global_step % 3000 == 0:
+            if global_step % 1000 == 0:
                 torch.save(
                     decoder_encoder_optim.state_dict(),
                     join(CHECKPOINTS_PATH, EXP_NAME + f"_{global_step}_optim.pth"),
