@@ -83,11 +83,12 @@ print(f'\nBCE_loss: {BCE_loss}')
 
 # Convery predicted watermark to binary numbers and calculate bitwise accuracy
 fingerprints_predicted = (decoder_output > 0).float()
-bitwise_accuracy = 1.0 - torch.mean(
-    torch.abs(fingerprints - fingerprints_predicted)
-)
+bitwise_acc_arr = 1.0 - torch.mean(torch.abs(fingerprints - fingerprints_predicted), dim=0)
+bitwise_accuracy = 1.0 - torch.mean(torch.abs(fingerprints - fingerprints_predicted))
 
-print(f'\nbitwise accuracy: {bitwise_accuracy}')
+torch.save(fingerprints_predicted, '/home/kaden/Desktop/GAN_Watermarking/fingertest.pth')
+
+print(f'\naverage bitwise accuracy: {bitwise_accuracy}')
 
 # Save samples as a batch in one image
 torchvision.utils.save_image(fake_image, os.path.join(args.save_path, 'sample.png'), normalize=True)
@@ -100,3 +101,8 @@ torchvision.utils.save_image(fake_image, os.path.join(args.save_path, 'sample.pn
 #     img *= 255
 #     img = np.uint8(img)
 #     plt.imsave(os.path.join(args.save_path, f'sample_{i}.png'), img)
+
+print('\nActual Watermark:')
+print(fingerprints.cpu().numpy())
+print('\nPredicted Watermark')
+print(fingerprints_predicted[np.argmax(bitwise_acc_arr.cpu().numpy())].cpu().numpy())
