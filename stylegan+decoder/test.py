@@ -6,15 +6,11 @@ from torch import nn
 from model import StyledGenerator, StegaStampDecoder
 import os
 from torchvision import transforms
-import glob
 import numpy as np
 
 data_processing = transforms.ColorJitter(0, 0, 0, 0)  # (brightness, contrast, saturation, hue)
 
 parser = argparse.ArgumentParser(description='Progressive Growing of GANs')
-
-parser.add_argument('--dataset_path', type=str, default='/home/kaden/Downloads/archive/img_align_celeba/img_align_celeba',
-                    help='Path the folder with all dataset images')
 
 parser.add_argument('--size', type=int, default=128,
                     help='Size of the generated image. For CelebA this should be 128 and for flower dataset it should be 256')
@@ -22,23 +18,23 @@ parser.add_argument('--size', type=int, default=128,
 parser.add_argument('--num_samples', type=int, default=16,
                     help='Number of samples to generate')
 
-parser.add_argument('--device', type=str, default='cuda:0',
+parser.add_argument('--device', type=str, default='cuda:2',
                     help='Write cuda:<device_num> for gpu or cpu for cpu')
 
 parser.add_argument('--decoder_weights', type=str,
-                    default="/home/kaden/Downloads/stegastamp_100_6000_decoder.pth",
+                    default="/home/kaden/Desktop/GAN_Watermarking/ArtificialGANFingerprints/results/brightness0.75/checkpoints/stegastamp_100_30000_decoder.pth",
                     help='Path to where the decoder weights are saved')
 
 parser.add_argument('--stylegan_weights', type=str,
-                    default="/home/kaden/Desktop/GAN_Watermarking/stylegan+decoder/checkpoints/good_optim1/00076000.pth",
+                    default="/home/kaden/Desktop/GAN_Watermarking/stylegan+decoder/StyleGAN+decoder_weights/checkpoints/brightness0.75/00018000.pth",
                     help='Path to where the StyleGAN weights are saved')
 
 parser.add_argument('--fingerprints', type=str,
-                    default="/home/kaden/Desktop/GAN_Watermarking/stylegan+decoder/fingerprints/good_optim1/fingerprints.pth",
+                    default="/home/kaden/Desktop/GAN_Watermarking/stylegan+decoder/StyleGAN+decoder_weights/watermarks/brightness0.75/fingerprints.pth",
                     help='Path to where the watermark/fingerprints is saved')
 
 parser.add_argument('--save_path', type=str,
-                    default="/home/kaden/Desktop/GAN_Watermarking (copy)/stylegan+decoder/samples/normal",
+                    default="/home/kaden/Desktop/GAN_Watermarking (another copy)/stylegan+decoder/sample",
                     help='Path of the folder to where the images will be saved')
 
 args = parser.parse_args()
@@ -69,7 +65,7 @@ _, gen_in2 = torch.randn(2, args.num_samples, code_size, device=args.device).chu
 gen_in2 = gen_in2.squeeze(0)
 
 # Give random noise to generator and save output
-fake_image = generator(gen_in2, step=step, alpha=1)
+fake_image = generator(gen_in2, step=step, alpha=0)
 
 # Do image processing on the image from the generator
 altered_images = data_processing(fake_image)
