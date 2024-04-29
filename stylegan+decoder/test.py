@@ -83,7 +83,7 @@ print(f'\nBCE_loss: {BCE_loss}')
 
 # Convery predicted watermark to binary numbers and calculate bitwise accuracy
 fingerprints_predicted = (decoder_output > 0).float()
-bitwise_acc_arr = 1.0 - torch.mean(torch.abs(fingerprints - fingerprints_predicted), dim=0)
+bitwise_acc_arr = 1.0 - torch.mean(torch.abs(fingerprints - fingerprints_predicted), dim=1)
 bitwise_accuracy = 1.0 - torch.mean(torch.abs(fingerprints - fingerprints_predicted))
 
 torch.save(fingerprints_predicted, '/home/kaden/Desktop/GAN_Watermarking/fingertest.pth')
